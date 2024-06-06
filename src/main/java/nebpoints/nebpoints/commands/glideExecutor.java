@@ -112,7 +112,7 @@ public class glideExecutor implements CommandExecutor {
                     plyrs.get(pCount).addScoreboardTag("activeResourcePack");
                     plyrs.get(pCount).performCommand("pack");
                 }
-                Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run tp " + myName + " " + x + " " + spawnY + " " + z + " " + spawnLR + " " + spawnUD);
+                Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run minecraft:tp " + myName + " " + x + " " + spawnY + " " + z + " " + spawnLR + " " + spawnUD);
             }
             Bukkit.dispatchCommand(console, "say [Gliding] Starting game with " + plyrs.size() + " player(s)");
             new gliding(nebplugin, plyrs, sortColors, mapID, console, gameData);

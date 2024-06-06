@@ -5,6 +5,7 @@ import nebpoints.nebpoints.commands.stopExecutor;
 import nebpoints.nebpoints.dataFiles.gameData;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.ConsoleCommandSender;
@@ -45,7 +46,7 @@ public class gliding {
         double spawnY = gameData.getRespawnY(mapID, 0);
         double spawnZ = gameData.getRespawnZ(mapID, 0);
         double spawnXoff = gameData.getRespawnOffX(mapID);
-        double spawnYoff = gameData.getRespawnOffZ(mapID);
+        double spawnZoff = gameData.getRespawnOffZ(mapID);
 
         Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run gamerule commandBlockOutput false");
         Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run gamerule logAdminCommands false");
@@ -89,13 +90,19 @@ public class gliding {
                 plyr.getInventory().setChestplate(coolerElytra);
             }
 
+            float spawnLR = (float) gameData.getRespawnLR(mapID, 0);
+            float spawnUD = (float) gameData.getRespawnUD(mapID, 0);
+            double x = spawnX + (spawnXoff * i);
+            double z = spawnZ + (spawnZoff * i);
+
+            plyr.teleport(new Location(Bukkit.getWorld(gameData.gameWorld), x, spawnY, z, spawnLR, spawnUD));
             //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with " + obj.coolElytra);
 
             //ominous start sound
             Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
 
             //set cabinet
-            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnYoff * i));//x, y, z of block to stand on
+            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
             Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
 
             Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~1 ~ minecraft:glass");
@@ -175,7 +182,7 @@ public class gliding {
                     String myName = plyr.getName();
                     String myColor = sortColors.get(p);
                     String unstandBlock;//x, y, z of block to stop standing on
-                    unstandBlock = (spawnX + (spawnXoff * p)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnYoff * p));
+                    unstandBlock = (spawnX + (spawnXoff * p)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * p));
 
                     //Count to 3
                     if (time[0] <= 20L * gameData.timerLength) {
