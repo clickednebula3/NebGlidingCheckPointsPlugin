@@ -1,0 +1,93 @@
+name: Nebpoints
+version: '${project.version}'
+main: nebpoints.nebpoints.Nebpoints
+api-version: 1.18
+authors: [ clickednebula3 ]
+description: A plugin for setting checkpoint and respawning for elytra gliding minigames
+website: http://nebneb.ddns.net
+commands:
+  maredare:
+    aliases: [horserace, marerace, mare, maredarerace, murdermysteryrace]
+    description: starts the fair mare dare race with utmost care in a specified place, leaves no trace (e.g. a broken vase), and retreats with a steady pace in case of a rare encounter with a basic hair-laced mace
+    permission: nebpoints.maredare
+  nebClearScheduledRepeatingTasks:
+    description: clears Bukkit scheduled repeating tasks used by NebPoints.
+    permission: nebpoints.admin
+  setneblobby:
+    description: sets the lobby for neb-games
+    aliases: [setlobbyneb, nebsetlobby]
+    permission: nebpoints.admin
+  pack:
+    description: enables nebpack for the user
+    aliases: [texturepack, texture, textures, resourcepack, resource, resources, rp, rpack, nebpack]
+  togglepack:
+    description: toggles pack-mode on and off
+    aliases: [packtoggle]
+  leave:
+    description: Stops any current neb game
+    aliases: [
+      stopneb, nebstop, stopgame, gamestop,
+      leaveneb, nebleave, leavegame, gameleave,
+      glidestop, stopglide,
+      disasterstop, stopdisaster,
+      leaveglide, glideleave,
+      leavedisaster, disasterleave
+    ]
+  start:
+    description: Starts any neb game
+    aliases: [startneb, nebstart, nebgame]
+    permission: nebpoints.start
+  glide:
+    description: Starts the gliding game
+    aliases: [glidestart, startgliding, elytra, elytrastart, startelytra, raceglide, gliderace]
+    permission: nebpoints.gliding
+  disaster:
+    description: Starts the disastrophe game
+    aliases: [distrophie, disastrophe, disastrophic, catastrophe, startdisaster]
+    permission: nebpoints.disaster
+  nebmsg:
+    description: sends a word to a player
+    aliases: [nmsg]
+    permission: nebpoints.nebmsg
+  nebmaplist:
+    description: stores loaded maps into config
+    aliases: [nebreloadmaps, reloadmaps, neblistmap, nebconfigreloadmap]
+    permission: nebpoints.maplist
+  nebmapcreategliding:
+    description: Creates an empty map for gliding
+    aliases: [mapcreateg, mapcreateg, glidemapcreate, creategmap, createglidingmap, createglidemap]
+    usage: /nebmapcreategliding mapName isRanked cpOffx cpOffz
+    permission: nebpoints.mapcreate
+  nebmapcreatecp:
+    description: Creates a checkpoint and sets the respawn point of it for a gliding map
+    usage: /nebmapcreatecp mapName <X> <Y> <Z> <Yaw> <Pitch>
+    permission: nebpoints.mapcreate
+  nebmapcreatecpa:
+    description: Creates a box bound for the latest checkpoint of a gliding map
+    usage: /nebmapcreatecpa mapName <X> <Y> <Z>
+    permission: nebpoints.mapcreate
+  nebmapcreatecpb:
+    description: Creates an ending box bound for the latest checkpoint of a gliding map
+    usage: /nebmapcreatecpb mapName <X> <Y> <Z>
+    permission: nebpoints.mapcreate
+  nebmapdeletecp:
+    description: Removes the last checkpoint from a gliding map
+    usage: /nebmapdeletecp mapName
+    permission: nebpoints.mapcreate
+  nebmapdeletegliding:
+    description: Deletes a gliding map
+    usage: /nebmapdeletegliding mapName
+    permission: nebpoints.mapcreate
+  nebshowmaps:
+    description: Lists gliding maps
+    permission: nebpoints.mapcreate
+  glidehost:
+    description: Only starts gliding race when enough players are ready.
+    usage: /glidehost minPlayerCount mapName
+    aliases: [hostglide, hostgliding, glidinghost]
+    permission: nebpoints.host.gliding
+  glidehostjoin:
+    description: Joins a hosted gliding game during its waiting period.
+    usage: /glidehostjoin gameId
+    aliases: [joinhostglide, joinglidehost, glidejoin]
+    permission: nebpoints.joinhost.gliding
