@@ -81,7 +81,7 @@ public class gliding {
 
             //give elytra early
             ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
-            coolerElytra.addEnchantment(Enchantment.DURABILITY, 3);
+            coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
             coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
             coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
             coolerElytra.getItemMeta().setUnbreakable(true);
@@ -211,7 +211,7 @@ public class gliding {
 
                             //give elytra
                             ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
-                            coolerElytra.addEnchantment(Enchantment.DURABILITY, 3);
+                            coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
                             coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
                             coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
                             coolerElytra.getItemMeta().setUnbreakable(true);
@@ -286,7 +286,7 @@ public class gliding {
 
                                     ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
                                     ItemStack airItem = new ItemStack(Material.AIR);
-                                    coolerElytra.addEnchantment(Enchantment.DURABILITY, 3);
+                                    coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
                                     coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
                                     coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
                                     plyr.getInventory().setChestplate(coolerElytra);

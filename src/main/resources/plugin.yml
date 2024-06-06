@@ -1,7 +1,7 @@
 name: Nebpoints
 version: '${project.version}'
 main: nebpoints.nebpoints.Nebpoints
-api-version: 1.18
+api-version: 1.20
 authors: [ clickednebula3 ]
 description: A plugin for setting checkpoint and respawning for elytra gliding minigames
 website: http://nebneb.ddns.net

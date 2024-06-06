@@ -8,8 +8,15 @@ import nebpoints.nebpoints.dataFiles.gameData;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ThrownPotion;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionBrewer;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -203,7 +210,13 @@ public class disastrophe {
                         }
                         if (disasters.disasterId[currentDisaster[0]] == "levitation") {
                             for (Player plyr : plyrs) {
-                                Bukkit.dispatchCommand(gameData.console, "execute at "+plyr.getName()+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:25b,Amplifier:8b,Duration:40}]}}}");
+                                ItemStack potionStack = new ItemStack(Material.SPLASH_POTION);
+                                PotionMeta potionMeta = (PotionMeta) potionStack.getItemMeta();
+                                potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LEVITATION, 2*20, 8), true);
+                                potionStack.setItemMeta(potionMeta);
+                                ThrownPotion potion = (ThrownPotion) plyr.getWorld().spawnEntity(plyr.getLocation().add(0, 1, 0), EntityType.POTION);
+                                potion.setItem(potionStack);
+//                                Bukkit.dispatchCommand(gameData.console, "execute at "+plyr.getName()+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:25b,Amplifier:8b,Duration:40}]}}}");
                             }
                         }
                         if (disasters.disasterId[currentDisaster[0]] == "skeleton") {
@@ -245,7 +258,13 @@ public class disastrophe {
                         }
                         if (disasters.disasterId[currentDisaster[0]] == "blindness") {
                             for (Player plyr : plyrs) {
-                                Bukkit.dispatchCommand(gameData.console, "execute at "+plyr.getName()+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:33b,Amplifier:8b,Duration:400}]}}}");
+                                ItemStack potionStack = new ItemStack(Material.SPLASH_POTION);
+                                PotionMeta potionMeta = (PotionMeta) potionStack.getItemMeta();
+                                potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.BLINDNESS, 8*20, 8), true);
+                                potionStack.setItemMeta(potionMeta);
+                                ThrownPotion potion = (ThrownPotion) plyr.getWorld().spawnEntity(plyr.getLocation().add(0, 1, 0), EntityType.POTION);
+                                potion.setItem(potionStack);
+//                                Bukkit.dispatchCommand(gameData.console, "execute at "+plyr.getName()+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:33b,Amplifier:8b,Duration:400}]}}}");
                             }
                         }
 
