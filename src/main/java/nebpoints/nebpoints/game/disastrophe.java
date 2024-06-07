@@ -188,7 +188,13 @@ public class disastrophe {
                                 double spawnZ = disasterData.ArenaList[ArenaID].arenaSpawns[i][2];
                                 if (time[0] > HARDMODETIME[0]) {
                                     Bukkit.dispatchCommand(gameData.console, "execute in minecraft:overworld positioned "+spawnX+" "+spawnY+" "+spawnZ+" run summon husk ~ ~ ~ {Attributes:[{Name:\"generic.followRange\",Base:70}],IsBaby:0,HandItems:[{id:\"minecraft:slime_ball\",Count:1,tag:{Enchantments:[{id:\"knockback\",lvl:1},{id:\"vanishing\",lvl:1}]}},{}]}");
-                                    Bukkit.dispatchCommand(gameData.console, "execute in minecraft:overworld positioned "+spawnX+" "+spawnY+" "+spawnZ+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:1b,Amplifier:3b,Duration:200}]}}}");
+//                                    Bukkit.dispatchCommand(gameData.console, "execute in minecraft:overworld positioned "+spawnX+" "+spawnY+" "+spawnZ+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:1b,Amplifier:3b,Duration:200}]}}}");
+                                    ItemStack potionStack = new ItemStack(Material.SPLASH_POTION);
+                                    PotionMeta potionMeta = (PotionMeta) potionStack.getItemMeta();
+                                    potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LEVITATION, 10*20, 3), true);
+                                    potionStack.setItemMeta(potionMeta);
+                                    ThrownPotion potion = (ThrownPotion) Bukkit.getWorld(gameData.gameWorld).spawnEntity(new Location(Bukkit.getWorld(gameData.gameWorld), spawnX, spawnY, spawnZ), EntityType.POTION);
+                                    potion.setItem(potionStack);
                                 } else {
                                     Bukkit.dispatchCommand(gameData.console, "execute in minecraft:overworld positioned "+spawnX+" "+spawnY+" "+spawnZ+" run summon husk ~ ~ ~ {Attributes:[{Name:\"generic.followRange\",Base:70}],IsBaby:0,HandItems:[{id:\"minecraft:slime_ball\",Count:1,tag:{Enchantments:[{id:\"knockback\",lvl:3},{id:\"vanishing\",lvl:1}]}},{}]}");
                                     Bukkit.dispatchCommand(gameData.console, "execute in minecraft:overworld positioned "+spawnX+" "+spawnY+" "+spawnZ+" run summon potion ~ ~1 ~ {Item:{id:\"minecraft:splash_potion\",Count:1b,tag:{Potion:\"minecraft:water\",CustomPotionEffects:[{Id:1b,Amplifier:2b,Duration:200}]}}}");

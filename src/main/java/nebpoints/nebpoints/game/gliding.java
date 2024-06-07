@@ -89,12 +89,6 @@ public class gliding {
             String myName = plyr.getName();
             applyElytra(plyr, gameData);
 
-            float spawnLR = (float) gameData.getRespawnLR(mapID, 0);
-            float spawnUD = (float) gameData.getRespawnUD(mapID, 0);
-            double x = spawnX + (spawnXoff * i);
-            double z = spawnZ + (spawnZoff * i);
-
-            plyr.teleport(new Location(Bukkit.getWorld(gameData.gameWorld), x, spawnY, z, spawnLR, spawnUD));
             //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with " + obj.coolElytra);
 
             gameData.checkApplyPack(plyr);
@@ -103,7 +97,7 @@ public class gliding {
             Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
 
             //set cabinet
-            gameData.placeGlidingCabinet(mapID, i);
+            gameData.placeGlidingCabinet(mapID, i, plyr);
 //            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
 //            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
 //

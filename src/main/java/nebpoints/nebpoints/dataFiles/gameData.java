@@ -8,6 +8,7 @@ import org.bukkit.Sound;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 
@@ -163,11 +164,15 @@ public class gameData {
         return false;
     }
 
-    public boolean placeGlidingCabinet(int mapID, int cabinetID) {
-        Location cabinetLocation = new Location(Bukkit.getWorld(gameWorld),
+    public boolean placeGlidingCabinet(int mapID, int cabinetID, Player plyr) {
+        Location cabinetLocation = new Location(
+                Bukkit.getWorld(gameWorld),
                 getRespawnX(mapID, 0) + getRespawnOffX(mapID)*cabinetID, getRespawnY(mapID, 0),
                 getRespawnZ(mapID, 0) + getRespawnOffZ(mapID)*cabinetID,
-                (float) getRespawnLR(mapID, 0), (float) getRespawnUD(mapID, 0));
+                (float) getRespawnLR(mapID, 0), (float) getRespawnUD(mapID, 0)
+        );
+
+        plyr.teleport(cabinetLocation);
 
         Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, -1, 0)).setType(Material.GOLD_BLOCK);//bottom
         Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 2, 0)).setType(Material.GOLD_BLOCK);//top
