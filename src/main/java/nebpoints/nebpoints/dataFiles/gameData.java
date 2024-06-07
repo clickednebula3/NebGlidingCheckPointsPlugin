@@ -2,9 +2,12 @@ package nebpoints.nebpoints.dataFiles;
 
 import nebpoints.nebpoints.Nebpoints;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -149,6 +152,36 @@ public class gameData {
         return finalText;
     }
 
+    public boolean checkApplyPack(Player plyr) {
+        //has -> wants pack (toggle=on)
+        //active -> already applied it (literally has it)
+        if (plyr.getScoreboardTags().contains("hasResourcePack") && !plyr.getScoreboardTags().contains("activeResourcePack")) {
+            plyr.addScoreboardTag("activeResourcePack");
+            plyr.performCommand("pack");
+            return true;
+        }
+        return false;
+    }
+
+    public boolean placeGlidingCabinet(int mapID, int cabinetID) {
+        Location cabinetLocation = new Location(Bukkit.getWorld(gameWorld),
+                getRespawnX(mapID, 0) + getRespawnOffX(mapID)*cabinetID, getRespawnY(mapID, 0),
+                getRespawnZ(mapID, 0) + getRespawnOffZ(mapID)*cabinetID,
+                (float) getRespawnLR(mapID, 0), (float) getRespawnUD(mapID, 0));
+
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, -1, 0)).setType(Material.GOLD_BLOCK);//bottom
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 2, 0)).setType(Material.GOLD_BLOCK);//top
+
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(1, 0, 0)).setType(Material.GLASS);//leg-high
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(-1, 0, 0)).setType(Material.GLASS);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 0, 1)).setType(Material.GLASS);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 0, -1)).setType(Material.GLASS);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(1, 1, 0)).setType(Material.GLASS);//head-high
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(-1, 1, 0)).setType(Material.GLASS);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 1, 1)).setType(Material.GLASS);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 1, -1)).setType(Material.GLASS);
+        return true;
+    }
 
     public String getRandomMusic() {
         Random rand = new Random();

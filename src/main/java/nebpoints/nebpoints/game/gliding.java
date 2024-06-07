@@ -16,7 +16,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 
@@ -35,6 +34,15 @@ import java.util.ArrayList;
 
 public class gliding {
     public boolean[] isRunning = {true};
+
+    public void applyElytra(Player plyr, gameData gameData) {
+        ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
+        coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
+        coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
+        coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
+        coolerElytra.getItemMeta().setUnbreakable(true);
+        if (plyr.getWorld().equals(Bukkit.getWorld(gameData.gameWorld))) { plyr.getInventory().setChestplate(coolerElytra); }
+    }
 
     public gliding(Plugin nebplugin, ArrayList<Player> plyrs, ArrayList<String> sortColors, int mapID, ConsoleCommandSender console, gameData gameData) {
 
@@ -79,16 +87,7 @@ public class gliding {
         for (Player plyr : plyrs) {
 
             String myName = plyr.getName();
-
-            //give elytra early
-            ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
-            coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
-            coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
-            coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
-            coolerElytra.getItemMeta().setUnbreakable(true);
-            if (plyr.getWorld().getName().equals(gameData.gameWorld)) {
-                plyr.getInventory().setChestplate(coolerElytra);
-            }
+            applyElytra(plyr, gameData);
 
             float spawnLR = (float) gameData.getRespawnLR(mapID, 0);
             float spawnUD = (float) gameData.getRespawnUD(mapID, 0);
@@ -98,24 +97,27 @@ public class gliding {
             plyr.teleport(new Location(Bukkit.getWorld(gameData.gameWorld), x, spawnY, z, spawnLR, spawnUD));
             //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with " + obj.coolElytra);
 
+            gameData.checkApplyPack(plyr);
+
             //ominous start sound
             Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
 
             //set cabinet
-            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
-
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~1 ~ minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~1 minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~1 ~ minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~-1 minecraft:glass");
-
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~2 ~ minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~1 minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~2 ~ minecraft:glass");
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~-1 minecraft:glass");
-
-            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~3 ~ minecraft:gold_block");
+            gameData.placeGlidingCabinet(mapID, i);
+//            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
+//
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~1 ~ minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~1 minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~1 ~ minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~-1 minecraft:glass");
+//
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~2 ~ minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~1 minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~2 ~ minecraft:glass");
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~-1 minecraft:glass");
+//
+//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~3 ~ minecraft:gold_block");
 
             //Bukkit.dispatchCommand(console, "gamemode adventure "+myName);
             //Bukkit.dispatchCommand(console, "attribute "+myName+" minecraft:generic.max_health base set 6");
