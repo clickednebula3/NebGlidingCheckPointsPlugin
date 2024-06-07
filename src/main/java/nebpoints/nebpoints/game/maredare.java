@@ -153,6 +153,7 @@ public class maredare {
 //                            blindnessPotion.setItemMeta(blindnessPotionItemMeta);
 //                            plyr.getInventory().addItem(blindnessPotion);
                         }
+                        if (plyr.getScoreboardTags().contains(dead_tag)) { plyr.removeScoreboardTag(dead_tag); }
 
                         p++;
                     }
@@ -431,9 +432,13 @@ public class maredare {
 
     boolean withenBoundBox(Location playerLocation, int mapID) {
         double[] boundingBox = gameData.maredare_maps_loaded.get(mapID).boundingBoxCoords;
-        return boundingBox[0] < playerLocation.getX() && playerLocation.getX() < boundingBox[3] &&
-                boundingBox[1] < playerLocation.getY() && playerLocation.getY() < boundingBox[4] &&
-                boundingBox[2] < playerLocation.getZ() && playerLocation.getZ() < boundingBox[5];
+        return Math.min(boundingBox[0], boundingBox[3]) < playerLocation.getX() &&
+                Math.max(boundingBox[0], boundingBox[3]) > playerLocation.getX() &&
+
+                Math.min(boundingBox[1], boundingBox[4]) < playerLocation.getY() &&
+                Math.max(boundingBox[1], boundingBox[4]) > playerLocation.getY() &&
+                Math.min(boundingBox[2], boundingBox[5]) < playerLocation.getZ() &&
+                Math.max(boundingBox[2], boundingBox[5]) > playerLocation.getZ();
     }
 
     int performCheckpointCheckUp(ArrayList<Integer> collectedCPs, int mapID) {
