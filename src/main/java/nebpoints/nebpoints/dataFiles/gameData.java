@@ -164,7 +164,7 @@ public class gameData {
         return false;
     }
 
-    public boolean placeGlidingCabinet(int mapID, int cabinetID, Player plyr) {
+    public void placeGlidingCabinet(int mapID, int cabinetID, Player plyr, boolean breakGlidingCabinetInstead) {
         Location cabinetLocation = new Location(
                 Bukkit.getWorld(gameWorld),
                 getRespawnX(mapID, 0) + getRespawnOffX(mapID)*cabinetID, getRespawnY(mapID, 0),
@@ -174,18 +174,23 @@ public class gameData {
 
         plyr.teleport(cabinetLocation);
 
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, -1, 0)).setType(Material.GOLD_BLOCK);//bottom
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 2, 0)).setType(Material.GOLD_BLOCK);//top
+        Material a = Material.GOLD_BLOCK;
+        Material b = Material.GLASS;
+        if (breakGlidingCabinetInstead) {
+            a = Material.AIR;
+            b = Material.AIR;
+        }
 
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(1, 0, 0)).setType(Material.GLASS);//leg-high
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(-1, 0, 0)).setType(Material.GLASS);
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 0, 1)).setType(Material.GLASS);
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 0, -1)).setType(Material.GLASS);
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(1, 1, 0)).setType(Material.GLASS);//head-high
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(-1, 1, 0)).setType(Material.GLASS);
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 1, 1)).setType(Material.GLASS);
-        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.add(0, 1, -1)).setType(Material.GLASS);
-        return true;
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, -1, 0)).setType(a);//bottom
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, 2, 0)).setType(a);//top
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(1, 0, 0)).setType(b);//leg-high
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(-1, 0, 0)).setType(b);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, 0, 1)).setType(b);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, 0, -1)).setType(b);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(1, 1, 0)).setType(b);//head-high
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(-1, 1, 0)).setType(b);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, 1, 1)).setType(b);
+        Bukkit.getWorld(gameWorld).getBlockAt(cabinetLocation.clone().add(0, 1, -1)).setType(b);
     }
 
     public String getRandomMusic() {

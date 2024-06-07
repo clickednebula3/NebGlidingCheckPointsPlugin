@@ -106,12 +106,7 @@ public class maredareExecutor implements CommandExecutor {
 
             Location loc = new Location(gamewrld, x, spawnY, z);
             //plyrs.get(pCount).teleport(loc);
-            //has -> wants pack
-            //active -> already applied it
-            if (plyrs.get(pCount).getScoreboardTags().contains("hasResourcePack") && !plyrs.get(pCount).getScoreboardTags().contains("activeResourcePack")) {
-                plyrs.get(pCount).addScoreboardTag("activeResourcePack");
-                plyrs.get(pCount).performCommand("pack");
-            }
+            gameData.checkApplyPack(plyrs.get(pCount));
             Bukkit.dispatchCommand(gameData.console, "execute in " + gameData.mareWorld + " run tp " + myName + " " + x + " " + spawnY + " " + z + " " + spawnLR + " " + spawnUD);
         }
 

@@ -111,12 +111,7 @@ public class disasterExecutor implements CommandExecutor {
             Location loc = new Location(gamewrld, spawnX, spawnY, spawnZ);
 
             plyrs.get(pCount).teleport(loc);
-            //has -> wants pack
-            //active -> already applied it
-            if (plyrs.get(pCount).getScoreboardTags().contains("hasResourcePack") && !plyrs.get(pCount).getScoreboardTags().contains("activeResourcePack")) {
-                plyrs.get(pCount).addScoreboardTag("activeResourcePack");
-                plyrs.get(pCount).performCommand("pack");
-            }
+            gameData.checkApplyPack(plyrs.get(pCount));
             Bukkit.dispatchCommand(console, "execute in minecraft:overworld run tp " + myName + " " + spawnX + " " + spawnY + " " + spawnZ + " " + spawnLR + " " + spawnUD);
         }
 

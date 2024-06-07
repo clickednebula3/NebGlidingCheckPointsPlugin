@@ -6,7 +6,7 @@
 
     <groupId>nebpoints</groupId>
     <artifactId>nebpoints</artifactId>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Nebpoints</name>

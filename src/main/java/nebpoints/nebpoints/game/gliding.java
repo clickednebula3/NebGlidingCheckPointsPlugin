@@ -97,7 +97,7 @@ public class gliding {
             Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
 
             //set cabinet
-            gameData.placeGlidingCabinet(mapID, i, plyr);
+            gameData.placeGlidingCabinet(mapID, i, plyr, false);
 //            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
 //            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
 //
@@ -164,7 +164,7 @@ public class gliding {
                 //game end text
                 if (remainingTime[0] > 0) { remainingTime[0]--; }
                 else if (remainingTime[0] == 0) {
-                    time[0] = 20 * gameData.gameLength;
+                    time[0] = 20L * gameData.gameLength;
                     Bukkit.dispatchCommand(console, "tellraw @a \"Game ended with a determined winner! Ranking (sorted):\"");
                     for (int winner : winRank) {
                         Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"-" + plyrs.get(winner).getName() + "\",\"color\":\"" + sortColors.get(winner) + "\"}");
@@ -177,8 +177,8 @@ public class gliding {
 
                     String myName = plyr.getName();
                     String myColor = sortColors.get(p);
-                    String unstandBlock;//x, y, z of block to stop standing on
-                    unstandBlock = (spawnX + (spawnXoff * p)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * p));
+//                    String unstandBlock;//x, y, z of block to stop standing on
+//                    unstandBlock = (spawnX + (spawnXoff * p)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * p));
 
                     //Count to 3
                     if (time[0] <= 20L * gameData.timerLength) {
@@ -196,21 +196,23 @@ public class gliding {
                         Bukkit.dispatchCommand(console, "title " + myName + " title {\"text\":\"Go!!\",\"color\":\"" + sortColors.get(p) + "\"}");
                         if (time[0] % 20 == 1) {
                             //break cabinet
-                            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.timerGo + " master @s ~ ~ ~ 1 1.85 1");
 
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~ ~ minecraft:air");
-
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~1 ~ minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~1 minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~1 ~ minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~-1 minecraft:air");
-
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~2 ~ minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~1 minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~2 ~ minecraft:air");
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~-1 minecraft:air");
-
-                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~3 ~ minecraft:air");
+                            gameData.placeGlidingCabinet(mapID, p, plyr, true);
+//                            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.timerGo + " master @s ~ ~ ~ 1 1.85 1");
+//
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~ ~ minecraft:air");
+//
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~1 ~ minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~1 minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~1 ~ minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~-1 minecraft:air");
+//
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~2 ~ minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~1 minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~2 ~ minecraft:air");
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~-1 minecraft:air");
+//
+//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~3 ~ minecraft:air");
 
                             //give elytra
                             ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
@@ -340,15 +342,16 @@ public class gliding {
                             //GOING FORWARDS
                             else if (myCP.get(p) < m) {
                                 //THE END CHECKPOINT
-                                if (myCP.get(p) == (gameData.getCpCount(mapID) - 2)) {
+                                if (m <= myCP.get(p)+4 && myCP.get(p) == (gameData.getCpCount(mapID) - 2)) {
                                     Bukkit.dispatchCommand(console, "playsound " + gameData.finishSound + " master " + myName + " ~ ~ ~ 2 1.65 1");
                                     winRank.add(p);
                                     Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"" + myName + " finished gliding! Rank: " + winRank.size() + "\",\"color\":\"" + myColor + "\"}");
                                     remainingTime[0] = WINEVENTREMAININGTIME[0];
+                                    if (winRank.size() == plyrs.size()) { remainingTime[0] = WINEVENTREMAININGTIME[0]/5; }
                                     myCP.set(p, m);//p = index of player, m = index of checkpoint, myCp.get(o) = index of last reached checkpoint
                                 }
                                 //ALMOST TEHRE
-                                else if (myCP.get(p) == (gameData.getCpCount(mapID) - 3)) {
+                                else if (m <= myCP.get(p)+4 && myCP.get(p) == (gameData.getCpCount(mapID) - 3)) {
                                     for (Player pl : plyrs) {
                                         Bukkit.dispatchCommand(console, "playsound " + gameData.timerGo + " master " + pl.getName() + " ~ ~ ~ 2 1.85 1");
                                     }
@@ -377,7 +380,7 @@ public class gliding {
                     }
 
                     //minititle checkpoint shower
-                    if (remainingTime[0] > 0) { Bukkit.dispatchCommand(console, "title " + myName + " actionbar \"Remaining Time: " + (remainingTime[0]) + "\""); }
+                    if (remainingTime[0] > 0) { Bukkit.dispatchCommand(console, "title " + myName + " actionbar \"Remaining Time: " + Math.ceil((double) remainingTime[0] / 20) + "\""); }
                     else {
                         if (myCP.get(p) < gameData.getCpCount(mapID) - 1) {
                             //double lastX = obj.getRespawnX(mapID, myCP.get(p));
@@ -446,7 +449,9 @@ public class gliding {
                         //Bukkit.dispatchCommand(console, "effect clear " + myName + " minecraft:glowing");
 
                         //back to lobby
-                        Bukkit.dispatchCommand(console, "execute in " + gameData.lobbyWorld + " run tp " + myName + " " + gameData.lobbyCoords[0] + " " + gameData.lobbyCoords[1] + " " + gameData.lobbyCoords[2] + " " + gameData.lobbyCoords[3] + " " + gameData.lobbyCoords[4]);
+                        Location lobbyLocation = new Location(Bukkit.getWorld(gameData.lobbyWorld), gameData.lobbyCoords[0], gameData.lobbyCoords[1], gameData.lobbyCoords[2], (float) gameData.lobbyCoords[3], (float) gameData.lobbyCoords[4]);
+                        plyr.teleport(lobbyLocation);
+//                        Bukkit.dispatchCommand(console, "execute in " + gameData.lobbyWorld + " run tp " + myName + " " + gameData.lobbyCoords[0] + " " + gameData.lobbyCoords[1] + " " + gameData.lobbyCoords[2] + " " + gameData.lobbyCoords[3] + " " + gameData.lobbyCoords[4]);
 //                            try {
 //                                FileWriter myWriter = new FileWriter("glidingData.txt");
 //                                myWriter.write("Files in Java might be tricky, but it is fun enough!");
