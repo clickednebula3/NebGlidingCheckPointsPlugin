@@ -5,16 +5,14 @@ import org.bukkit.*;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
 
-public class gameData {
+public class noisifierData {
     public ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
 
-    public String lobbyWorld = "hub";
+    public String lobbyWorld = "overworld";
     public String gameWorld = "glidemaps";
     public String mareWorld = "glidemaps";
 
@@ -28,9 +26,6 @@ public class gameData {
 //    public String[] tag_glide_color = {"glider_red", "glider_blue", "glider_yellow", "glider_green"};
     public String tag_glide_host = "glide_host";
     public String tag_glide_host_join = "glide_joinhost";
-    public String tag_in_disaster = "disasterRunning";
-    public String tag_disaster = "disaster";
-    public String tag_disaster_ghost = "disaster_ghost";
 
     //color sort index tables
     public Material[] glideBlockColors = {Material.RED_CONCRETE, Material.BLUE_CONCRETE, Material.YELLOW_CONCRETE, Material.LIME_CONCRETE};
@@ -39,19 +34,17 @@ public class gameData {
     public ChatColor[] gamerChatColors = {ChatColor.RED, ChatColor.BLUE, ChatColor.YELLOW, ChatColor.GREEN};
     public String[] gamerSimpleColors = {"red", "blue", "yellow", "green"};
 
-    @Deprecated
     public String coolElytra = "minecraft:elytra{Enchantments:[{id:binding_curse,lvl:1},{id:vanishing_curse,lvl:1},{id:unbreaking,lvl:5}]}";
 
     public String[] musicDiscs = {"13", "blocks", "cat", "far", "mall", "otherside", "pigstep", "wait", "relic"};
     public Sound[] musicDiscIds = {Sound.MUSIC_DISC_13, Sound.MUSIC_DISC_BLOCKS, Sound.MUSIC_DISC_CAT, Sound.MUSIC_DISC_FAR, Sound.MUSIC_DISC_MALL, Sound.MUSIC_DISC_OTHERSIDE, Sound.MUSIC_DISC_PIGSTEP, Sound.MUSIC_DISC_WAIT, Sound.MUSIC_DISC_RELIC};
     public String[] packCredit = {"Music by YousifGaming", "Music by YousifGaming", "Music C418 - Dog", "Music by YousifGaming", "Music by YousifGaming", "Music Nebby - Mystical Cave", "Music by YousifGaming", "Music by YousifGaming", "Music Aaron Cherof - Relic"};
 
-//    public String startSound = "minecraft:entity.experience_orb.pickup";//1.5
-//    public String finishSound = "minecraft:ui.toast.challenge_complete";//1.65
-//    public String timerTick = "minecraft:block.note_block.chime";//1.6
-//    public String timerGo = "minecraft:item.trident.thunder";//1.85
-//    public String wrongWay = "minecraft:block.note_block.bass";//0.3
-    public Sound snd_start = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+    public String startSound = "minecraft:entity.experience_orb.pickup";//1.5
+    public String finishSound = "minecraft:ui.toast.challenge_complete";//1.65
+    public String timerTick = "minecraft:block.note_block.chime";//1.6
+    public String timerGo = "minecraft:item.trident.thunder";//1.85
+    public String wrongWay = "minecraft:block.note_block.bass";//0.3
     public Sound snd_finish = Sound.UI_TOAST_CHALLENGE_COMPLETE;
     public Sound snd_tick = Sound.BLOCK_NOTE_BLOCK_CHIME;
     public Sound snd_go = Sound.ITEM_TRIDENT_THUNDER;
@@ -82,7 +75,7 @@ public class gameData {
     public Location disasterLobbyLocation = new Location(Bukkit.getWorld("hub"), 47.5, 65, -1.5, -90, 0);
     public Location maredareLobbyLocation = new Location(Bukkit.getWorld("hub"), 45.5, 65, 6.5, 0, 0);
 
-    public gameData(Nebpoints nebplugin) {
+    public noisifierData(Nebpoints nebplugin) {
         ReadMapsFromConfig(nebplugin.getConfig());
         //temp; move to config todo: MOVE INTO maredareData
         firstMap.addCheckpoint(new MaredareCheckpoint(new double[]{-322.5, 119, 181.5, 0, 0}, 5.0));
@@ -149,7 +142,6 @@ public class gameData {
             String mapName = getMapName(map);
             double[] cpOff = {getRespawnOffX(map), getRespawnOffZ(map)};
             boolean isRanked = false;
-            ItemStack icon = getMapIcon(map);
             for (int rmap = 0; rmap < getRankedMaps().length; rmap++) {
                 if (Objects.equals(mapName, getRankedMaps()[rmap])) {
                     isRanked = true;
@@ -178,7 +170,6 @@ public class gameData {
             thisMap.put("cpOff", cpOff);
             thisMap.put("isRanked", isRanked);
             thisMap.put("checkpoints", checkpoints);
-            thisMap.put("icon", icon);
             gliding_maps.add(thisMap);
         }
 
@@ -206,11 +197,8 @@ public class gameData {
                 Boolean ThisisRanked = (Boolean) ThisMap.get("isRanked");
                 List<Double> ThiscpOff = (List<Double>) ThisMap.get("cpOff");
 
-                ItemStack icon = new ItemStack(Material.ELYTRA);
-                if (ThisMap.containsKey("icon")) { icon = (ItemStack) ThisMap.get("icon"); }
-
-                GlidingMap thisGlidingMap = new GlidingMap(ThismapName, ThiscpOff, ThisisRanked, icon);
-                console.sendMessage(thisGlidingMap.mapName + " | " + thisGlidingMap.isRanked + " | " + thisGlidingMap.cpOff[0] + ", " + thisGlidingMap.cpOff[1] + " | " + icon.toString() + "\n\n");
+                GlidingMap thisGlidingMap = new GlidingMap(ThismapName, ThiscpOff, ThisisRanked);
+                console.sendMessage(thisGlidingMap.mapName + " | " + thisGlidingMap.isRanked + " | " + thisGlidingMap.cpOff[0] + ", " + thisGlidingMap.cpOff[1] + "\n\n");
 
                 List<?> checkpoints = (List<?>) ThisMap.get("checkpoints");
                 for (Object checkpoint : checkpoints) {
@@ -252,17 +240,6 @@ public class gameData {
             return true;
         }
         return false;
-    }
-
-    public ItemStack generateItem(ItemStack item, String name, String... lores) {
-        ItemMeta meta = item.getItemMeta();
-
-        meta.setDisplayName(name);
-        List<String> loresList = new ArrayList<>(Arrays.asList(lores));
-        meta.setLore(loresList);
-
-        item.setItemMeta(meta);
-        return item;
     }
 
     public ChatColor chatColor(ArrayList<Integer> sortColorsIndexes, int p) { return gamerChatColors[sortColorsIndexes.get(p%sortColorsIndexes.size())%gamerChatColors.length]; }
@@ -385,9 +362,6 @@ public class gameData {
     }
     public String getMapName(int mapID){
         return gliding_maps_loaded.get(mapID).mapName;
-    }
-    public ItemStack getMapIcon(int mapID) {
-        return gliding_maps_loaded.get(mapID).icon;
     }
     public String getMaredareMapName(int mapID){
         return maredare_maps_loaded.get(mapID).mapName;

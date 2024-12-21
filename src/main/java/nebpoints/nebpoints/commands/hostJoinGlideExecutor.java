@@ -36,12 +36,14 @@ public class hostJoinGlideExecutor implements CommandExecutor {
             sender.sendMessage("Must run command as player");
             return false;
         }
-        if (args.length < 1) {
-            sender.sendMessage("Not enough arguments. Check syntax");
+
+        if (((Player) sender).getPlayer().getScoreboardTags().contains(gameData.tag_in_game)) {
+            sender.sendMessage("You are already in a game! Do /leave to forfeit.");
             return true;
         }
-        if (((Player) sender).getPlayer().getScoreboardTags().contains("gameRunning")) {
-            sender.sendMessage("You are already in a game! Do /leave to forfeit.");
+
+        if (args.length < 1) {
+            sender.sendMessage("Not enough arguments. Check syntax");
             return true;
         }
 
@@ -49,12 +51,12 @@ public class hostJoinGlideExecutor implements CommandExecutor {
         hostId = hostId.toLowerCase();
 
         if (Bukkit.getServer().getOnlinePlayers().contains(Bukkit.getServer().getPlayer(hostId))) {
-            if (Bukkit.getServer().getPlayer(hostId).getScoreboardTags().contains("glide_host")) {
+            if (Bukkit.getServer().getPlayer(hostId).getScoreboardTags().contains(gameData.tag_glide_host)) {
                 Player player = (Player) sender;
-                if (!player.getScoreboardTags().contains("glide_host")) {
-                    player.addScoreboardTag("gameRunning");
-                    player.addScoreboardTag("glide_joinhost");
-                    player.addScoreboardTag("glide_joinhost_"+hostId);
+                if (!player.getScoreboardTags().contains(gameData.tag_glide_host)) {
+                    player.addScoreboardTag(gameData.tag_in_game);
+                    player.addScoreboardTag(gameData.tag_glide_host_join);
+                    player.addScoreboardTag(gameData.tag_glide_host_join+"_"+hostId);
                 }
             }
         }

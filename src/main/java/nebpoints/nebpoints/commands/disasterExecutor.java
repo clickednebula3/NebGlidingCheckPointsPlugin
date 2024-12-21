@@ -2,19 +2,19 @@ package nebpoints.nebpoints.commands;
 
 import nebpoints.nebpoints.dataFiles.Arenas;
 import nebpoints.nebpoints.Nebpoints;
+import nebpoints.nebpoints.dataFiles.GlidingMap;
 import nebpoints.nebpoints.dataFiles.disasterData;
 import nebpoints.nebpoints.dataFiles.gameData;
 import nebpoints.nebpoints.game.disastrophe;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -43,7 +43,6 @@ public class disasterExecutor implements CommandExecutor {
             return true;
         }
 
-        ConsoleCommandSender console = disasterData.console;
         Material[] joinBlocks = {Material.RED_CONCRETE_POWDER, Material.BLUE_CONCRETE_POWDER, Material.YELLOW_CONCRETE_POWDER, Material.LIME_CONCRETE_POWDER};
         String[] joinColor = {"red", "blue", "yellow", "green"};
 
@@ -57,29 +56,47 @@ public class disasterExecutor implements CommandExecutor {
                 }
                 arenaIndex++;
             }
+        } else {
+            //open GUI Menu for Gliding Maps
+            Player player = ((Player) sender).getPlayer();
+            Inventory mainInv = Bukkit.createInventory(player, 9*3, "Disastrophe Maps");
+
+            for (int i=0; i<disasterData.ArenaList.length; i++) {
+                Arenas thisMap = disasterData.ArenaList[i];
+                String lore;
+                if (player.hasPermission("nebpoints.disaster")) { lore = "Requires RANK, which you have!"; }
+                else { lore = "Requires RANK, get it from the store!"; }
+                mainInv.setItem(i, gameData.generateItem(new ItemStack(Material.CREEPER_HEAD), thisMap.arenaName, lore));
+            }
+
+            player.openInventory(mainInv);
+            return true;
         }
+
         World lbbywrld = Bukkit.getServer().getWorld(disasterData.lobbyWorld);
         World gamewrld = Bukkit.getServer().getWorld(disasterData.gameWorld);
 
 
         //get players and teams
         ArrayList<Player> plyrs = new ArrayList<>();
-        ArrayList<String> sortColors = new ArrayList<>();
+//        ArrayList<String> sortColors = new ArrayList<>();//change to sortColorIndexes
+        ArrayList<Integer> sortColorsIndexes = new ArrayList<>();
+
         for (int index = 0; index < joinBlocks.length; index++) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 assert lbbywrld != null;
                 if (p.getWorld().getName().equals(lbbywrld.getName()) && p.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() == joinBlocks[index]) {
                     plyrs.add(p);
-                    sortColors.add(joinColor[index]);
+                    sortColorsIndexes.add(index);
+//                    sortColors.add(joinColor[index]);
                 }
             }
         }
 
         //leave early if nobody joined
-        if (plyrs.size() <= 0) {
-            String myName = sender.getName();
-            Bukkit.dispatchCommand(console, "tellraw "+myName+" \"No Players. Teleporting to lobby\"");
-            Bukkit.dispatchCommand(console, "tellraw "+myName+" \"Use this command again once all players chose their colors and are ready\"");
+        if (plyrs.isEmpty()) {
+            sender.sendMessage("No Players. Teleporting to lobby...");
+            sender.sendMessage("Use this command again once all players chose their colors and are ready.");
             ((Player) sender).performCommand("warp disaster");
             return true;
         }
@@ -87,13 +104,15 @@ public class disasterExecutor implements CommandExecutor {
         //handle joins and teams
         for (int pCount = 0; pCount < plyrs.size(); pCount++) {
             String myName = plyrs.get(pCount).getName();
-            String myColor = sortColors.get(pCount);
+            String myColor = gameData.simpleColor(sortColorsIndexes, pCount);
+            ChatColor myChatColor = gameData.chatColor(sortColorsIndexes, pCount);
             //log player joins
-            Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"[Disastrophe] " + myName + " joined as Player" + (pCount + 1) + " with color:" + myColor + " on map:"+ disasterData.ArenaList[ArenaID].arenaName+"\",\"color\":\""+myColor+"\"}");
+            Bukkit.broadcastMessage(ChatColor.RESET + "[NebPoints] " +myChatColor+myName+":"+(pCount+1)+":"+myColor+ChatColor.RESET+" joined to glide on map:"+disasterData.ArenaList[ArenaID].arenaName);
+//            Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"[Disastrophe] " + myName + " joined as Player" + (pCount + 1) + " with color:" + myColor + " on map:"+ disasterData.ArenaList[ArenaID].arenaName+"\",\"color\":\""+myColor+"\"}");
             //tag players
-            plyrs.get(pCount).addScoreboardTag("disasterRunning");
-            plyrs.get(pCount).addScoreboardTag("disaster");
-            plyrs.get(pCount).addScoreboardTag("disaster_"+myColor);
+            plyrs.get(pCount).addScoreboardTag(gameData.tag_in_disaster);
+            plyrs.get(pCount).addScoreboardTag(gameData.tag_disaster);
+            plyrs.get(pCount).addScoreboardTag(gameData.tag_disaster+"_"+myColor);
 
             //tp to arena
             int spawnIndex;
@@ -112,11 +131,12 @@ public class disasterExecutor implements CommandExecutor {
 
             plyrs.get(pCount).teleport(loc);
             gameData.checkApplyPack(plyrs.get(pCount));
-            Bukkit.dispatchCommand(console, "execute in minecraft:overworld run tp " + myName + " " + spawnX + " " + spawnY + " " + spawnZ + " " + spawnLR + " " + spawnUD);
+//            Bukkit.dispatchCommand(console, "execute in minecraft:overworld run tp " + myName + " " + spawnX + " " + spawnY + " " + spawnZ + " " + spawnLR + " " + spawnUD);
         }
 
-        Bukkit.dispatchCommand(console, "say [Disastrophe] Starting game with " + plyrs.size() + " player(s)");
-        new disastrophe(nebplugin, plyrs, sortColors, ArenaID, gameData, disasterData);
+//        Bukkit.dispatchCommand(console, "say [Disastrophe] Starting game with " + plyrs.size() + " player(s)");
+        Bukkit.broadcastMessage(ChatColor.RESET+"[NebPoints] Starting "+ChatColor.YELLOW+"Disastrophe"+ChatColor.RESET+" with "+plyrs.size()+" player(s)");
+        new disastrophe(nebplugin, plyrs, sortColorsIndexes, ArenaID, gameData, disasterData);
         return true;
     }
 }

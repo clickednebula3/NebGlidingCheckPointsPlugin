@@ -39,6 +39,7 @@ public final class Nebpoints extends JavaPlugin {
         this.getCommand("nebmaplist").setExecutor(new nebmapdataExecutor(this, gameData));
         this.getCommand("setneblobby").setExecutor(new setlobbyExecutor(this, gameData));
         this.getCommand("nebClearScheduledRepeatingTasks").setExecutor(new nebClearScheduledRepeatingTasksExecutor(gameData));
+        this.getCommand("noisifier").setExecutor(new noisifierExecutor(this, gameData));
 
         this.getCommand("start").setExecutor(new startExecutor());
         this.getCommand("pack").setExecutor(new packExecutor());
@@ -62,6 +63,7 @@ public final class Nebpoints extends JavaPlugin {
         this.getCommand("nebmapcreatecpb").setTabCompleter(new glideCompleter(gameData, true, false));
         this.getCommand("nebmapdeletecp").setTabCompleter(new glideCompleter(gameData, false, false));
         this.getCommand("nebmapdeletegliding").setTabCompleter(new glideCompleter(gameData, false, false));
+        this.getCommand("noisifier").setTabCompleter(new noisifierCompleter(gameData));
 
         File myObj = new File("glidingData.txt");
         try {

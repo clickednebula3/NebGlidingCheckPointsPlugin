@@ -37,9 +37,7 @@ public class maredareExecutor implements CommandExecutor {
         //variables
         Material[] joinBlocks = {Material.RED_GLAZED_TERRACOTTA, Material.BLUE_GLAZED_TERRACOTTA, Material.YELLOW_GLAZED_TERRACOTTA, Material.LIME_GLAZED_TERRACOTTA};
         String[] joinColor = {"red", "blue", "yellow", "green"};
-        World lbbywrld;
-        if (gameData.lobbyWorld == "overworld") { lbbywrld = Bukkit.getServer().getWorld("hub"); }
-        else { lbbywrld = Bukkit.getServer().getWorld(gameData.lobbyWorld); }
+        World lbbywrld = Bukkit.getServer().getWorld(gameData.lobbyWorld);
         World gamewrld = Bukkit.getServer().getWorld(gameData.mareWorld);
 
 

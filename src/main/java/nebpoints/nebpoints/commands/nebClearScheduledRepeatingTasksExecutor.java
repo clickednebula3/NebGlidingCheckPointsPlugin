@@ -13,6 +13,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class nebClearScheduledRepeatingTasksExecutor implements CommandExecutor {
 
@@ -23,20 +24,21 @@ public class nebClearScheduledRepeatingTasksExecutor implements CommandExecutor 
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (clearScheduledRepeatingTasks()) {
-            sender.sendMessage("Cleared Finished NebPoints Repeating Tasks.\nThis may result in errors in running games.\nRejoining is Recommended.");
+        boolean force = args.length > 1 && Objects.equals(args[1], "force");
+        if (clearScheduledRepeatingTasks(force)) {
+            if (force) { sender.sendMessage("Cleared All Saved NebPoints Repeating Tasks.\nThis may result in errors in running games.\nRejoining is Recommended."); }
+            else { sender.sendMessage("Cleared Finished NebPoints Repeating Tasks.\nThis may result in errors in running games.\nRejoining is Recommended."); }
         } else {
             sender.sendMessage("There are no NebPoints Repeating Tasks.");
         }
         return true;
     }
-    public boolean clearScheduledRepeatingTasks() {
-        if (gameData.ScheduledRepeatingTasks.size() == 0) {
-            return false;
-        }
+
+    public boolean clearScheduledRepeatingTasks(boolean force) {
+        if (gameData.ScheduledRepeatingTasks.isEmpty()) { return false; }
 
         for (int i=0; i<gameData.ScheduledRepeatingTasks.size(); i++) {
-            if (gameData.FinishedRepeatingTasks.get(i)) {
+            if (force || gameData.FinishedRepeatingTasks.get(i)) {
                 Bukkit.getScheduler().cancelTask( gameData.ScheduledRepeatingTasks.get(i) );
                 gameData.ScheduledRepeatingTasks.remove(i);
                 gameData.FinishedRepeatingTasks.remove(i);

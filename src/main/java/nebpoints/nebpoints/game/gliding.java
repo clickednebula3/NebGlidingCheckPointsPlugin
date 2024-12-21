@@ -3,12 +3,10 @@ package nebpoints.nebpoints.game;
 import nebpoints.nebpoints.commands.nebClearScheduledRepeatingTasksExecutor;
 import nebpoints.nebpoints.commands.stopExecutor;
 import nebpoints.nebpoints.dataFiles.gameData;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,6 +16,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /* TODO:
  *  //(CHECK) Freeze players when start timer
@@ -30,40 +30,93 @@ import java.util.ArrayList;
  *  //(CHECK) Make firework boosters auto-boost (check off-hand for firework maybe?) also lower their boost (and maybe not a firework because that has more power?)
  *  //(CHECK) Show Checkpoint of each player in the low title place
  *  //() Fix Checkpoint respawning, again
+ *  //() Get how fast you finished the map
+ *  //() Save best time to a new file that is not config.yml
+ *  //() Leaderboards with PAPI maybe?
  */
 
 public class gliding {
     public boolean[] isRunning = {true};
 
-    public void applyElytra(Player plyr, gameData gameData) {
+//    String[] tag_color = {"glider_red", "glider_blue", "glider_yellow", "glider_green"};//not sure if implementing serves anything, and how to do so if so
+
+    private ItemStack getCoolerElytra() {
         ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
         coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
         coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
         coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
         coolerElytra.getItemMeta().setUnbreakable(true);
-        if (plyr.getWorld().equals(Bukkit.getWorld(gameData.gameWorld))) { plyr.getInventory().setChestplate(coolerElytra); }
+        return coolerElytra;
     }
 
-    public gliding(Plugin nebplugin, ArrayList<Player> plyrs, ArrayList<String> sortColors, int mapID, ConsoleCommandSender console, gameData gameData) {
+    private void applyCoolerElytra(Player player, World world) {
+        if (player.getWorld().equals(world)) {
+            player.getInventory().remove(Material.FIREWORK_ROCKET);
+            player.getInventory().setChestplate(getCoolerElytra());
+        }
+    }
+
+    private void preparePlayerAndEffects(Player player, World world) {
+        player.setGameMode(GameMode.ADVENTURE);
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(6);
+        player.setHealth(6);
+        player.setFireTicks(0);
+        player.getInventory().remove(Material.FIREWORK_ROCKET);
+        PotionEffect glo = new PotionEffect(PotionEffectType.GLOWING, 20 * 3 * 60, 1);
+        PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
+        PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
+        if (player.getWorld().equals(world)) {
+            player.addPotionEffect(glo);
+            player.addPotionEffect(sat);
+            player.addPotionEffect(reg);
+        }
+    }
+
+    private void unpreparePlayers(List<Player> plyrs, gameData gameData, ArrayList<Integer> sortColorIndexes) {
+        int p = 0;
+        for (Player plyr : plyrs) {
+            plyr.getInventory().remove(Material.ELYTRA);
+            plyr.getInventory().remove(Material.FIREWORK_ROCKET);
+
+            plyr.setGameMode(GameMode.ADVENTURE);
+            plyr.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
+            plyr.setHealth(20);
+
+            plyr.removePotionEffect(PotionEffectType.GLOWING);
+            plyr.removePotionEffect(PotionEffectType.LEVITATION);
+            PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
+            PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
+            plyr.addPotionEffect(sat);
+            plyr.addPotionEffect(reg);
+
+            plyr.teleport(gameData.glideLobbyLocation);
+
+            plyr.removeScoreboardTag(gameData.tag_in_game);
+            plyr.removeScoreboardTag(gameData.tag_glide+"_"+gameData.simpleColor(sortColorIndexes, p));
+            p++;
+        }
+    }
+
+    private void prepareGameRules(World world) {
+        world.setGameRule(GameRule.COMMAND_BLOCK_OUTPUT, false);
+        world.setGameRule(GameRule.LOG_ADMIN_COMMANDS, false);
+        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+    }
+
+    public gliding(Plugin nebplugin, ArrayList<Player> plyrs, ArrayList<Integer> sortColorsIndexes, int mapID, gameData gameData) {
 
         ArrayList<Integer> myCP = new ArrayList<>();//the cp of each player
-        ArrayList<Integer> eCD = new ArrayList<>();//cp tp cooldown for each player
+        ArrayList<Integer> eCD = new ArrayList<>();//cp tp cooldown for each player (will not tp unless cooldown finished; useful for levitation)
         ArrayList<Integer> winRank = new ArrayList<>();//order the winners
 
-        double spawnX = gameData.getRespawnX(mapID, 0);
-        double spawnY = gameData.getRespawnY(mapID, 0);
-        double spawnZ = gameData.getRespawnZ(mapID, 0);
-        double spawnXoff = gameData.getRespawnOffX(mapID);
-        double spawnZoff = gameData.getRespawnOffZ(mapID);
+        World gameWorld = Bukkit.getWorld(gameData.gameWorld);
 
-        Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run gamerule commandBlockOutput false");
-        Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run gamerule logAdminCommands false");
-        Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run gamerule doImmediateRespawn true");
+        prepareGameRules(Objects.requireNonNull(gameWorld));
+
+//        Bukkit.dispatchCommand(gameData.console, "title @a reset");
+//        Bukkit.dispatchCommand(gameData.console, "title @a times 0 30 0");
 
         //set up spawn box
-        Bukkit.dispatchCommand(console, "title @a reset");
-        Bukkit.dispatchCommand(console, "title @a times 0 30 0");
-
         //make sure everyone is online and is added once (just as a bug prevention measure)
 //        ArrayList<Player> uniquePlyrs = new ArrayList<>();
 //        for (Player plyr : plyrs) {
@@ -85,34 +138,12 @@ public class gliding {
         //prepare players
         int i = 0;
         for (Player plyr : plyrs) {
-
-            String myName = plyr.getName();
-            applyElytra(plyr, gameData);
-
-            //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with " + obj.coolElytra);
-
+            //elytra
+            applyCoolerElytra(plyr, gameWorld);
+            plyr.resetTitle();
             gameData.checkApplyPack(plyr);
-
-            //ominous start sound
-            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
-
-            //set cabinet
+            plyr.playSound(plyr.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 9999, 1.15f);
             gameData.placeGlidingCabinet(mapID, i, plyr, false);
-//            String standBlock = (spawnX + (spawnXoff * i)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * i));//x, y, z of block to stand on
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~ ~ minecraft:gold_block");
-//
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~1 ~ minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~1 minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~1 ~ minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~1 ~-1 minecraft:glass");
-//
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~1 ~2 ~ minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~1 minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~-1 ~2 ~ minecraft:glass");
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~2 ~-1 minecraft:glass");
-//
-//            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + standBlock + " run setblock ~ ~3 ~ minecraft:gold_block");
-
             //Bukkit.dispatchCommand(console, "gamemode adventure "+myName);
             //Bukkit.dispatchCommand(console, "attribute "+myName+" minecraft:generic.max_health base set 6");
             //Bukkit.dispatchCommand(console, "effect give "+myName+" minecraft:saturation 3 255 false");
@@ -135,25 +166,20 @@ public class gliding {
             if (isRunning[0]) {
                 //remove disconnecters and "/stop"ers, and stop the game
                 int ptemp = 0;
-                for (Player plyr : plyrs) {
-                    String myName = plyr.getName();
-                    String myColor = sortColors.get(ptemp);
-                    if (!plyr.getScoreboardTags().contains("glider") || !plyr.isOnline()) {
-                        Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"" + myName + " forfeited the gliding race\",\"color\":\"" + myColor + "\"}");
+                for (Player plyr : plyrs) {//todo: ERROR HERE
+                    if (!plyr.getScoreboardTags().contains(gameData.tag_glide) || !plyr.isOnline()) {
+                        Bukkit.broadcastMessage(gameData.chatColor(sortColorsIndexes, ptemp) + plyr.getName()+" forfeited the gliding race");
+//                        Bukkit.dispatchCommand(gameData.console, "tellraw @a {\"text\":\"" + plyr.getName() + " forfeited the gliding race\",\"color\":\"" + gameData.simpleColor(sortColorsIndexes, ptemp) + "\"}");
                         plyrs.remove(ptemp);
-                        sortColors.remove(ptemp);
+                        sortColorsIndexes.remove(ptemp);
                         myCP.remove(ptemp);
                         eCD.remove(ptemp);
-                        for (int winner : winRank) {
-                            if (winner == ptemp) {
-                                winRank.remove(winner);
-                            }
-                        }
+                        for (int winner : winRank) { if (winner == ptemp) { winRank.remove(winner); } }
                         ptemp--;
-                        if (plyrs.size() == 0) {
+                        if (plyrs.isEmpty()) {
                             isRunning[0] = false;
                             gameData.FinishedRepeatingTasks.set(myTaskIndex[0], true);
-                            new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks();
+                            new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks(false);
                         }
                     }
 
@@ -165,109 +191,70 @@ public class gliding {
                 if (remainingTime[0] > 0) { remainingTime[0]--; }
                 else if (remainingTime[0] == 0) {
                     time[0] = 20L * gameData.gameLength;
-                    Bukkit.dispatchCommand(console, "tellraw @a \"Game ended with a determined winner! Ranking (sorted):\"");
+                    Bukkit.broadcastMessage("[Nebpoints] Gliding ended with winners:");
+//                    Bukkit.dispatchCommand(gameData.console, "tellraw @a \"Game ended with a determined winner! Ranking (sorted):\"");
                     for (int winner : winRank) {
-                        Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"-" + plyrs.get(winner).getName() + "\",\"color\":\"" + sortColors.get(winner) + "\"}");
+                        Bukkit.broadcastMessage(ChatColor.RESET+"- "+gameData.chatColor(sortColorsIndexes, winner) + plyrs.get(winner).getName() + " ()");//todo ADD TIME TAKEN
+//                        Bukkit.dispatchCommand(gameData.console, "tellraw @a {\"text\":\"-" + plyrs.get(winner).getName() + "\",\"color\":\"" + sortColors.get(winner) + "\"}");
                     }
                 }
+
 
                 //repeat for each plyr (plyr-based game)
                 int p = 0;
                 for (Player plyr : plyrs) {
 
                     String myName = plyr.getName();
-                    String myColor = sortColors.get(p);
+                    String myColor = gameData.simpleColor(sortColorsIndexes, p);
+                    ChatColor myChatColor = gameData.chatColor(sortColorsIndexes, p);
 //                    String unstandBlock;//x, y, z of block to stop standing on
 //                    unstandBlock = (spawnX + (spawnXoff * p)) + " " + (spawnY - 1) + " " + (spawnZ + (spawnZoff * p));
 
                     //Count to 3
                     if (time[0] <= 20L * gameData.timerLength) {
-
-                        Bukkit.dispatchCommand(console, "title " + myName + " title {\"text\":\"Starting in: " + ((gameData.timerLength * 1L) - (time[0] / 20)) + "...\",\"color\":\"" + sortColors.get(p) + "\"}");
+                        long t = (gameData.timerLength - (time[0] / 20));
+                        plyr.sendTitle(myChatColor+"Starting in: "+t+"...", "", 0, 30, 0);
+//                        Bukkit.dispatchCommand(gameData.console, "title " + myName + " title {\"text\":\"Starting in: " +  ((gameData.timerLength * 1L) - (time[0] / 20)) + "...\",\"color\":\"" + sortColors.get(p) + "\"}");
                         if (time[0] % 20 == 0) {
-                            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.timerTick + " master @s ~ ~ ~ 1 1.6 1");
+                            plyr.playSound(plyr.getLocation(), gameData.snd_tick, SoundCategory.MASTER, 1f, 1.6f, 1);
+//                            Bukkit.dispatchCommand(gameData.console, "execute as " + myName + " run playsound " + gameData.timerTick + " master @s ~ ~ ~ 1 1.6 1");
                         }
                         eCD.set(p, 3);
 
                     }
                     //At (obj.timerLength+1) seconds, start game (GO!!)
                     else if (time[0] <= 20 * (gameData.timerLength + 1L)) {
-
-                        Bukkit.dispatchCommand(console, "title " + myName + " title {\"text\":\"Go!!\",\"color\":\"" + sortColors.get(p) + "\"}");
+                        plyr.sendTitle(myChatColor+"Go!!", "", 0, 30, 0);
+//                        Bukkit.dispatchCommand(gameData.console, "title " + myName + " title {\"text\":\"Go!!\",\"color\":\"" + sortColors.get(p) + "\"}");
                         if (time[0] % 20 == 1) {
                             //break cabinet
 
                             gameData.placeGlidingCabinet(mapID, p, plyr, true);
+                            plyr.playSound(plyr.getLocation(), gameData.snd_go, SoundCategory.MASTER, 1f, 1.85f, 1);
 //                            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.timerGo + " master @s ~ ~ ~ 1 1.85 1");
-//
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~ ~ minecraft:air");
-//
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~1 ~ minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~1 minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~1 ~ minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~1 ~-1 minecraft:air");
-//
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~1 ~2 ~ minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~1 minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~-1 ~2 ~ minecraft:air");
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~2 ~-1 minecraft:air");
-//
-//                            Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " positioned " + unstandBlock + " run setblock ~ ~3 ~ minecraft:air");
-
                             //give elytra
-                            ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
-                            coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
-                            coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
-                            coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
-                            coolerElytra.getItemMeta().setUnbreakable(true);
-                            if (plyr.getWorld().getName().equals(gameData.gameWorld)) {
-                                plyr.getInventory().setChestplate(coolerElytra);
-                            }
+                            applyCoolerElytra(plyr, gameWorld);
 
                             //put effects in place
-                            plyr.setGameMode(GameMode.ADVENTURE);
-                            plyr.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(6);
-                            PotionEffect glo = new PotionEffect(PotionEffectType.GLOWING, 20 * 1 * 60, 1);
-                            PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
-                            PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
-                            if (plyr.getWorld().getName().equals(gameData.gameWorld)) {
-                                plyr.addPotionEffect(glo);
-                                plyr.addPotionEffect(sat);
-                                plyr.addPotionEffect(reg);
-                            }
+                            preparePlayerAndEffects(plyr, gameWorld);
                         }
 
-                        if (time[0] == 20 * (gameData.timerLength + 1L)) {
-                            String chosenDisc = gameData.getRandomMusic();
-                            if (chosenDisc != "cat" && chosenDisc != "otherside") {
-                                Bukkit.dispatchCommand(console, "tellraw " + myName + " {\"text\":\"Music by YousifGaming\",\"color\":\"dark_red\"}");
-                            } else if (chosenDisc == "cat") {
-                                Bukkit.dispatchCommand(console, "tellraw " + myName + " {\"text\":\"Music C418 - Dog\",\"color\":\"dark_red\"}");
-                            } else if (chosenDisc == "otherside") {
-                                Bukkit.dispatchCommand(console, "tellraw " + myName + " {\"text\":\"Music Nebby - Mystical Cave\",\"color\":\"dark_red\"}");
-                            }
-                            Bukkit.dispatchCommand(console, "playsound minecraft:music_disc." + chosenDisc + " record " + myName + " ~ ~ ~ 999999999999 1 1");
-                        }
+                        if (time[0] == 20 * (gameData.timerLength + 1L)) { gameData.playGameMusic(plyr); }
 
                         if (eCD.get(p) > 0) {
                             eCD.set(p, eCD.get(p) - 1);
-                            if (eCD.get(p) == 1) {
-                                plyr.setGliding(true);
-                            }
-                        } else {
-                            plyr.setGliding(true);
-                        }
+                            if (eCD.get(p) == 1) { plyr.setGliding(true); }
+                        } else { plyr.setGliding(true); }
 
                     }
                     //During game After the timer
                     else {
 
                         boolean winnersContainsMe = false;
-                        for (int winner : winRank) { if (winner == p) { winnersContainsMe = true; } }
+                        for (int winner : winRank) { if (winner == p) { winnersContainsMe = true; break; } }
 
-                        if (plyr.getInventory().getItemInOffHand().getType() == Material.FIREWORK_ROCKET) {
-                            plyr.setVelocity(new Vector(plyr.getVelocity().getX() * 1.075, plyr.getVelocity().getY() * 1.05, plyr.getVelocity().getZ() * 1.075));
-                        }
+                        if (plyr.getInventory().getItemInOffHand().getType() == Material.FIREWORK_ROCKET)
+                        { plyr.setVelocity(new Vector(plyr.getVelocity().getX() * 1.075, plyr.getVelocity().getY() * 1.05, plyr.getVelocity().getZ() * 1.075)); }
 
                         if (plyr.hasPotionEffect(PotionEffectType.LEVITATION)) {
                             plyr.setVelocity(new Vector(plyr.getVelocity().getX() * 1.075, plyr.getVelocity().getY(), plyr.getVelocity().getZ() * 1.075));//make levitating less of a slowerizer
@@ -280,29 +267,23 @@ public class gliding {
                             double rZ = gameData.getRespawnZ(mapID, myCP.get(p));
                             double rLR = gameData.getRespawnLR(mapID, myCP.get(p));
                             double rUD = gameData.getRespawnUD(mapID, myCP.get(p));
-                            String respawnCoords = rX + " " + rY + " " + rZ + " " + rLR + " " + rUD;
+//                            String respawnCoords = rX + " " + rY + " " + rZ + " " + rLR + " " + rUD;
 
-                            if (rX == -1.0 || rY == -1.0 || rZ == -1.0 || rLR == -1.0 || rUD == -1.0) {
-
-                            } else {
+                            if (rX != -1.0 && rY != -1.0 && rZ != -1.0 && rLR != -1.0 && rUD != -1.0) {
                                 if (!winnersContainsMe) {
-                                    Bukkit.dispatchCommand(console, "tellraw " + myName + " \"You Fell! Teleporting to last checkpoint...\"");
-                                    Bukkit.dispatchCommand(console, "execute in " + gameData.gameWorld + " run tp " + myName + " " + respawnCoords);
+                                    plyr.sendMessage("You Fell! Teleporting to last checkpoint...");
+//                                    Bukkit.dispatchCommand(gameData.console, "tellraw " + myName + " \"You Fell! Teleporting to last checkpoint...\"");
+//                                    Bukkit.dispatchCommand(gameData.console, "execute in " + gameData.gameWorld + " run tp " + myName + " " + respawnCoords);
+                                    plyr.teleport(gameData.getRespawnLocation(mapID, myCP.get(p)));
+                                    applyCoolerElytra(plyr, gameWorld);
+                                    preparePlayerAndEffects(plyr, gameWorld);
 
-                                    ItemStack coolerElytra = new ItemStack(Material.ELYTRA);
-                                    ItemStack airItem = new ItemStack(Material.AIR);
-                                    coolerElytra.addEnchantment(Enchantment.UNBREAKING, 3);
-                                    coolerElytra.addEnchantment(Enchantment.BINDING_CURSE, 1);
-                                    coolerElytra.addEnchantment(Enchantment.VANISHING_CURSE, 1);
-                                    plyr.getInventory().setChestplate(coolerElytra);
-                                    plyr.getInventory().setItemInOffHand(airItem);
-
-                                    PotionEffect glo = new PotionEffect(PotionEffectType.GLOWING, 20 * 1 * 60, 1);
-                                    PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
-                                    PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
-                                    plyr.addPotionEffect(glo);
-                                    plyr.addPotionEffect(sat);
-                                    plyr.addPotionEffect(reg);
+//                                    PotionEffect glo = new PotionEffect(PotionEffectType.GLOWING, 20 * 1 * 60, 1);
+//                                    PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
+//                                    PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
+//                                    plyr.addPotionEffect(glo);
+//                                    plyr.addPotionEffect(sat);
+//                                    plyr.addPotionEffect(reg);
 
                                     //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with " + obj.coolElytra);
                                     //Bukkit.dispatchCommand(console, "effect give " + myName + " minecraft:saturation 3 255 false");
@@ -314,14 +295,15 @@ public class gliding {
                             eCD.set(p, 10);
                         }
 
-                        if (plyr.isSneaking()) { Bukkit.dispatchCommand(console, "effect clear " + myName + " minecraft:levitation"); }
+                        if (plyr.isSneaking() && plyr.hasPotionEffect(PotionEffectType.LEVITATION)) {
+                            plyr.removePotionEffect(PotionEffectType.LEVITATION);
+//                            Bukkit.dispatchCommand(gameData.console, "effect clear " + myName + " minecraft:levitation");
+                        }
 
                         if (eCD.get(p) > 0) {
                             eCD.set(p, eCD.get(p) - 1);
                             if (eCD.get(p) == 1) { if (!winnersContainsMe) { plyr.setGliding(true); } }
-                        } else {
-                            if (!winnersContainsMe) { plyr.setGliding(true);  }
-                        }
+                        } else if (!winnersContainsMe) { plyr.setGliding(true); }
 
 
                     }
@@ -336,32 +318,41 @@ public class gliding {
                         if (gameData.isInBox(mapID, m, plyrX, plyrY, plyrZ)) {
                             //GOING BACK
                             if (myCP.get(p) > m) {
-                                Bukkit.dispatchCommand(console, "title " + myName + " title {\"text\":\"Wrong way!\",\"color\":\"red\"}");
-                                Bukkit.dispatchCommand(console, "playsound " + gameData.wrongWay + " master " + myName + " ~ ~ ~ 2 0.3 1");
+                                plyr.sendTitle(ChatColor.DARK_RED + "Wrong Way!", "", 0, 30, 0);
+                                plyr.playSound(plyr.getLocation(), gameData.snd_wrong, SoundCategory.MASTER, 2f, 0.3f, 1);
+//                                Bukkit.dispatchCommand(gameData.console, "title " + myName + " title {\"text\":\"Wrong way!\",\"color\":\"red\"}");
+//                                Bukkit.dispatchCommand(gameData.console, "playsound " + gameData.wrongWay + " master " + myName + " ~ ~ ~ 2 0.3 1");
+                                plyr.setGliding(false);
                             }
                             //GOING FORWARDS
                             else if (myCP.get(p) < m) {
                                 //THE END CHECKPOINT
                                 if (m <= myCP.get(p)+4 && myCP.get(p) == (gameData.getCpCount(mapID) - 2)) {
-                                    Bukkit.dispatchCommand(console, "playsound " + gameData.finishSound + " master " + myName + " ~ ~ ~ 2 1.65 1");
+                                    gameWorld.playSound(plyr, gameData.snd_finish, SoundCategory.MASTER, 1f, 1.65f, 1);
+//                                    Bukkit.dispatchCommand(gameData.console, "playsound " + gameData.finishSound + " master " + myName + " ~ ~ ~ 2 1.65 1");
                                     winRank.add(p);
-                                    Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"" + myName + " finished gliding! Rank: " + winRank.size() + "\",\"color\":\"" + myColor + "\"}");
+                                    Bukkit.broadcastMessage(myChatColor+myName+" finished gliding! Time: "+(time[0]/20f));
+//                                    Bukkit.dispatchCommand(gameData.console, "tellraw @a {\"text\":\"" + myName + " finished gliding! Rank: " + winRank.size() + "\",\"color\":\"" + myColor + "\"}");
                                     remainingTime[0] = WINEVENTREMAININGTIME[0];
                                     if (winRank.size() == plyrs.size()) { remainingTime[0] = WINEVENTREMAININGTIME[0]/5; }
                                     myCP.set(p, m);//p = index of player, m = index of checkpoint, myCp.get(o) = index of last reached checkpoint
                                 }
                                 //ALMOST TEHRE
                                 else if (m <= myCP.get(p)+4 && myCP.get(p) == (gameData.getCpCount(mapID) - 3)) {
-                                    for (Player pl : plyrs) {
-                                        Bukkit.dispatchCommand(console, "playsound " + gameData.timerGo + " master " + pl.getName() + " ~ ~ ~ 2 1.85 1");
-                                    }
-                                    Bukkit.dispatchCommand(console, "tellraw " + myName + " \"Almost there! Traverse the final stretch!\"");
-                                    Bukkit.dispatchCommand(console, "tellraw @a {\"text\":\"" + myName + " is at the final checkpoint! Hurry up!\",\"color\":\"" + myColor + "\"}");
+                                    gameWorld.playSound(plyr, gameData.snd_go, SoundCategory.MASTER, 2f, 1.85f, 1);
+                                    plyr.sendMessage("Almost there! Traverse the final stretch!");
+                                    Bukkit.broadcastMessage(myChatColor+myName+" is at the final checkpoint! Hurry up!");
+//                                    for (Player pl : plyrs) {
+//                                        Bukkit.dispatchCommand(gameData.console, "playsound " + gameData.timerGo + " master " + pl.getName() + " ~ ~ ~ 2 1.85 1");
+//                                    }
+//                                    Bukkit.dispatchCommand(gameData.console, "tellraw " + myName + " \"Almost there! Traverse the final stretch!\"");
+//                                    Bukkit.dispatchCommand(gameData.console, "tellraw @a {\"text\":\"" + myName + " is at the final checkpoint! Hurry up!\",\"color\":\"" + myColor + "\"}");
                                     myCP.set(p, m);//p = index of player, m = index of checkpoint, myCp.get(o) = index of last reached checkpoint
                                 }
                                 //NORMAL CHECKPOINTS
                                 else if (m <= myCP.get(p)+4) {
-                                    Bukkit.dispatchCommand(console, "playsound " + gameData.timerGo + " master " + myName + " ~ ~ ~ 2 1.85 1");
+                                    gameWorld.playSound(plyr, gameData.snd_go, SoundCategory.MASTER, 1f, 1.85f, 1);
+//                                    Bukkit.dispatchCommand(gameData.console, "playsound " + gameData.timerGo + " master " + myName + " ~ ~ ~ 2 1.85 1");
                                     //for (Player pl : plyrs) {
                                     //    Bukkit.dispatchCommand(console, "title "+pl.getName()+" subtitle {\"text\":\""+myName+" reached checkpoint "+m+"\",\"color\":\""+myColor+"\"}");
                                     //    Bukkit.dispatchCommand(console, "title "+pl.getName()+" title \"\"");
@@ -370,8 +361,10 @@ public class gliding {
                                 }
                                 //MISSED TOO MANY CHECKPOINTS
                                 else {
-                                    Bukkit.dispatchCommand(console, "playsound " + gameData.timerGo + " master " + myName + " ~ ~ ~ 2 0.4 1");
-                                    Bukkit.dispatchCommand(console, "tellraw " + myName + " \"You missed too many checkpoints!\"");
+                                    plyr.playSound(plyr.getLocation(), gameData.snd_go, SoundCategory.MASTER, 2f, 0.4f, 1);
+                                    plyr.sendMessage("You missed too many checkpoints. Pass through the beacons.");
+//                                    Bukkit.dispatchCommand(gameData.console, "playsound " + gameData.timerGo + " master " + myName + " ~ ~ ~ 2 0.4 1");
+//                                    Bukkit.dispatchCommand(gameData.console, "tellraw " + myName + " \"You missed too many checkpoints!\"");
                                     plyr.setGliding(false);
                                 }
                             }
@@ -380,7 +373,10 @@ public class gliding {
                     }
 
                     //minititle checkpoint shower
-                    if (remainingTime[0] > 0) { Bukkit.dispatchCommand(console, "title " + myName + " actionbar \"Remaining Time: " + Math.ceil((double) remainingTime[0] / 20) + "\""); }
+                    if (remainingTime[0] > 0) {
+                        plyr.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(ChatColor.RESET+"Remaining Time: "+Math.ceil((double) remainingTime[0] / 20)));
+//                        Bukkit.dispatchCommand(gameData.console, "title " + myName + " actionbar \"Remaining Time: " + Math.ceil((double) remainingTime[0] / 20) + "\"");
+                    }
                     else {
                         if (myCP.get(p) < gameData.getCpCount(mapID) - 1) {
                             //double lastX = obj.getRespawnX(mapID, myCP.get(p));
@@ -401,21 +397,38 @@ public class gliding {
                             //else if (myColor == "yellow") {checkpointDistance[2] = finalPercentile;}
                             //else if (myColor == "green") {checkpointDistance[3] = finalPercentile;}
 
-                            String positionText = "";//[Red-1 99.9] [Blue-1 99.9] [Yellow-1 99.9] [Green-1 99.9]
-                            //[{"text":"[A]","color":"red"},{"text":" [B]","color":"blue"}]
+//                            String positionText = "";//[Red-1 99.9] [Blue-1 99.9] [Yellow-1 99.9] [Green-1 99.9]
+//                            //[{"text":"[A]","color":"red"},{"text":" [B]","color":"blue"}];
+//
+//                            int p_mini = 0;
+//                            for (Player plyr_mini : plyrs) {
+//                                String myName_mini = plyr_mini.getName();
+//                                String myColor_mini = sortColors.get(p_mini);
+//                                if (p_mini > 0) { positionText += ","; }
+//                                positionText += "{\"text\":\"[" + myName_mini + "-" + myCP.get(p_mini) + "] \",\"color\":\"" + myColor_mini + "\"}";
+//                                p_mini++;
+//                            }
+//
+//                            Bukkit.dispatchCommand(gameData.console, "title " + myName + " actionbar [" + positionText + "]");
+//
 
+                            StringBuilder checkpointActionbarString = new StringBuilder();
+                            checkpointActionbarString
+                                    .append(ChatColor.RESET)
+                                    .append("Time: ")
+                                    .append(Math.round(Math.ceil(time[0]/20f)))
+                                    .append(" ");
                             int p_mini = 0;
                             for (Player plyr_mini : plyrs) {
-                                String myName_mini = plyr_mini.getName();
-                                String myColor_mini = sortColors.get(p_mini);
-                                if (p_mini > 0) {
-                                    positionText += ",";
-                                }
-                                positionText += "{\"text\":\"[" + myName_mini + "-" + myCP.get(p_mini) + "] \",\"color\":\"" + myColor_mini + "\"}";
+                                checkpointActionbarString
+                                        .append(gameData.chatColor(sortColorsIndexes, p_mini))
+                                        .append("[")
+                                        .append(plyr_mini.getName())
+                                        .append(" <")
+                                        .append(myCP.get(p_mini)).append(">] ");
                                 p_mini++;
                             }
-
-                            Bukkit.dispatchCommand(console, "title " + myName + " actionbar [" + positionText + "]");
+                            plyr.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(checkpointActionbarString.toString()));
                         }
                     }
 
@@ -423,34 +436,38 @@ public class gliding {
                     if (time[0] >= 20L * gameData.gameLength || remainingTime[0] == 0) {
                         if (remainingTime[0] >= 0) {//at least 1 winner
                             //ending game
-                            Bukkit.dispatchCommand(console, "execute as " + myName + " run playsound " + gameData.finishSound + " master @s ~ ~ ~ 0.15 1.65 1");
+                            plyr.playSound(plyr.getLocation(), gameData.snd_finish, SoundCategory.MASTER,0.15f, 1.65f, 1);
+//                            Bukkit.dispatchCommand(gameData.console, "execute as " + myName + " run playsound " + gameData.finishSound + " master @s ~ ~ ~ 0.15 1.65 1");
                         } else {
                             //game ended with no winner
-                            Bukkit.dispatchCommand(console, "tellraw @a \"Game timer ended with no winners\"");
+                            Bukkit.broadcastMessage("[NebPoints] Gliding timer ended with no winners.");
+//                            Bukkit.dispatchCommand(gameData.console, "tellraw @a \"Game timer ended with no winners\"");
                         }
+                        remainingTime[0] = -1;
 
                         //clear elytra
-                        ItemStack coolerAir = new ItemStack(Material.AIR);
-                        plyr.getInventory().setChestplate(coolerAir);
-                        //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with minecraft:air");
-                        //take effects away
-                        plyr.setGameMode(GameMode.ADVENTURE);
-                        plyr.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
-                        plyr.removePotionEffect(PotionEffectType.GLOWING);
-                        plyr.removePotionEffect(PotionEffectType.LEVITATION);
-                        PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
-                        PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
-                        plyr.addPotionEffect(sat);
-                        plyr.addPotionEffect(reg);
-                        //Bukkit.dispatchCommand(console, "gamemode adventure "+myName);
-                        //Bukkit.dispatchCommand(console, "attribute "+myName+" minecraft:generic.max_health base set 20");
-                        //Bukkit.dispatchCommand(console, "effect give "+myName+" minecraft:saturation 3 255 false");
-                        //Bukkit.dispatchCommand(console, "effect give "+myName+" minecraft:regeneration 3 255 false");
-                        //Bukkit.dispatchCommand(console, "effect clear " + myName + " minecraft:glowing");
+//                        ItemStack coolerAir = new ItemStack(Material.AIR);
+//                        plyr.getInventory().setChestplate(coolerAir);
+//                        //Bukkit.dispatchCommand(console, "item replace entity " + myName + " armor.chest with minecraft:air");
+//                        //take effects away
+//                        plyr.setGameMode(GameMode.ADVENTURE);
+//                        plyr.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
+//                        plyr.removePotionEffect(PotionEffectType.GLOWING);
+//                        plyr.removePotionEffect(PotionEffectType.LEVITATION);
+//                        PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 3, 255);
+//                        PotionEffect reg = new PotionEffect(PotionEffectType.REGENERATION, 3, 255);
+//                        plyr.addPotionEffect(sat);
+//                        plyr.addPotionEffect(reg);
+//                        //Bukkit.dispatchCommand(console, "gamemode adventure "+myName);
+//                        //Bukkit.dispatchCommand(console, "attribute "+myName+" minecraft:generic.max_health base set 20");
+//                        //Bukkit.dispatchCommand(console, "effect give "+myName+" minecraft:saturation 3 255 false");
+//                        //Bukkit.dispatchCommand(console, "effect give "+myName+" minecraft:regeneration 3 255 false");
+//                        //Bukkit.dispatchCommand(console, "effect clear " + myName + " minecraft:glowing");
 
+                        unpreparePlayers(plyrs, gameData, sortColorsIndexes);
                         //back to lobby
-                        Location lobbyLocation = new Location(Bukkit.getWorld(gameData.lobbyWorld), gameData.lobbyCoords[0], gameData.lobbyCoords[1], gameData.lobbyCoords[2], (float) gameData.lobbyCoords[3], (float) gameData.lobbyCoords[4]);
-                        plyr.teleport(lobbyLocation);
+//                        Location lobbyLocation = new Location(Bukkit.getWorld(gameData.lobbyWorld), gameData.lobbyCoords[0], gameData.lobbyCoords[1], gameData.lobbyCoords[2], (float) gameData.lobbyCoords[3], (float) gameData.lobbyCoords[4]);
+
 //                        Bukkit.dispatchCommand(console, "execute in " + gameData.lobbyWorld + " run tp " + myName + " " + gameData.lobbyCoords[0] + " " + gameData.lobbyCoords[1] + " " + gameData.lobbyCoords[2] + " " + gameData.lobbyCoords[3] + " " + gameData.lobbyCoords[4]);
 //                            try {
 //                                FileWriter myWriter = new FileWriter("glidingData.txt");
@@ -463,13 +480,11 @@ public class gliding {
 //                            }
 
                         //untag players
-                        plyr.removeScoreboardTag("gameRunning");
-                        plyr.removeScoreboardTag("glider_" + myColor);
                         stopExecutor stopper = new stopExecutor(gameData);
                         stopper.stopPlayerGames(plyr);
                         isRunning[0] = false;
                         gameData.FinishedRepeatingTasks.set(myTaskIndex[0], true);
-                        new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks();
+                        new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks(false);
                     }
 
                     p++;

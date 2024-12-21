@@ -1,7 +1,11 @@
 package nebpoints.nebpoints.dataFiles;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+
+import java.util.Objects;
 
 public class Arenas {
     //main vars
@@ -21,6 +25,7 @@ public class Arenas {
     public int[] miniPlatform;
     public int[] miniPlatformCloneCoord;
     public double[][] skeletonRooms;
+
 
     //CANCELLED?
     //    public int[][] slimeblockFillCoords = {
@@ -70,21 +75,21 @@ public class Arenas {
         miniPlatformCloneCoord = miniPlatCloneCoord;
         skeletonRooms = skelerooms;
 
-        if (shape == "box") {
+        if (Objects.equals(shape, "box")) {
             arenaXstart = arenaCenterCoords[0] - edgeOffset;
             arenaYstart = arenaCenterCoords[1];
             arenaZstart = arenaCenterCoords[2] - edgeOffset;
             arenaXend = arenaCenterCoords[0] + edgeOffset;
             arenaYend = arenaCenterCoords[1] + height;
             arenaZend = arenaCenterCoords[2] + edgeOffset;
-        } else if (shape == "cyl") {
+        } else if (Objects.equals(shape, "cyl")) {
             arenaYstart = arenaCenterCoords[1];
             arenaYend = arenaCenterCoords[1] + height;
         }
     }
 
     public boolean isInBounds(Arenas arena, Player player){
-        if (arena.arenaShape == "cyl") {
+        if (Objects.equals(arena.arenaShape, "cyl")) {
             //check x,z point distance
             Location arenaLocation = new Location(player.getWorld(), arena.arenaCenterCoords[0], player.getLocation().getY(), arena.arenaCenterCoords[2]);
             double distance = player.getLocation().distance(arenaLocation);
@@ -93,7 +98,7 @@ public class Arenas {
             }
 
         }
-        else if (arena.arenaShape == "box") {
+        else if (Objects.equals(arena.arenaShape, "box")) {
             //check within box
             if (player.getLocation().getX() > arena.arenaXstart && player.getLocation().getX() < arena.arenaXend) {
                 if (player.getLocation().getZ() > arena.arenaZstart && player.getLocation().getZ() < arena.arenaZend) {
@@ -139,14 +144,14 @@ public class Arenas {
         int platX2;
         int platY2;
         int platZ2;
-        if (dangerLevel == "warning") {
+        if (Objects.equals(dangerLevel, "warning")) {
             platX = arena.warningArenas[platDangerLevel][0];
             platY = arena.warningArenas[platDangerLevel][1];
             platZ = arena.warningArenas[platDangerLevel][2];
             platX2 = arena.warningArenas[platDangerLevel][3];
             platY2 = arena.warningArenas[platDangerLevel][4];
             platZ2 = arena.warningArenas[platDangerLevel][5];
-        } else if (dangerLevel == "danger") {
+        } else if (Objects.equals(dangerLevel, "danger")) {
             platX = arena.dangerArenas[platDangerLevel][0];
             platY = arena.dangerArenas[platDangerLevel][1];
             platZ = arena.dangerArenas[platDangerLevel][2];
@@ -163,7 +168,7 @@ public class Arenas {
         }
         return platX+" "+platY+" "+platZ+" "+platX2+" "+platY2+" "+platZ2;
     }
-    //these 3 going to be deprectated for the one above
+    //these 3 going to be deprecated for the one above
     public String platSafeStr(Arenas arena) {
         int platX = arena.safeArena[0];
         int platY = arena.safeArena[1];

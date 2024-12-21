@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -61,7 +60,8 @@ public class maredare {
                 mares.add(myMare);
 
                 //ominous start sound
-                Bukkit.dispatchCommand(gameData.console, "execute as " + plyr.getName() + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
+                plyr.playSound(plyr.getLocation(), gameData.snd_start, SoundCategory.MASTER, 999999999999f, 1.15f, 1);
+//                Bukkit.dispatchCommand(gameData.console, "execute as " + plyr.getName() + " run playsound " + gameData.startSound + " master @s ~ ~ ~ 999999999999 1.15 1");
 
                 //set cabinet //x, y, z of block to stand on
                 prepareGlassBox(getStandBlock(spawnX, spawnY, spawnZ, spawnXoff, spawnYoff, p));
@@ -101,7 +101,7 @@ public class maredare {
                             if (plyrs.size() == 0) {
                                 isRunning[0] = false;
                                 gameData.FinishedRepeatingTasks.set(myTaskIndex[0], true);
-                                new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks();
+                                new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks(false);
                             }
                         }
 
@@ -124,7 +124,9 @@ public class maredare {
                 if (time[0] <= 20L*gameData.timerLength)
                 {
                     //sound every second
-                    for (int p=0; p<plyrs.size(); p++) { countDownTick(plyrs.get(p), sortColors.get(p), gameData.timerTick, time[0], gameData.timerLength); }
+                    for (int p=0; p<plyrs.size(); p++) {
+                        countDownTick(plyrs.get(p), sortColors.get(p), gameData.snd_tick, time[0], gameData.timerLength);
+                    }
                 }
                 //start frame
                 else if (time[0] == 20L *(gameData.timerLength+1))
@@ -253,7 +255,7 @@ public class maredare {
                     }
                     isRunning[0] = false;
                     gameData.FinishedRepeatingTasks.set(myTaskIndex[0], true);
-                    new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks();
+                    new nebClearScheduledRepeatingTasksExecutor(gameData).clearScheduledRepeatingTasks(false);
                 }
 
                 time[0]++;
@@ -265,7 +267,7 @@ public class maredare {
         gameData.FinishedRepeatingTasks.add(false);
     }
 
-    void countDownTick(Player player, String myColor, String timerTickSound, long time, int timerLength) {
+    void countDownTick(Player player, String myColor, Sound timerTickSound, long time, int timerLength) {
         Bukkit.dispatchCommand(gameData.console, "title "+player.getName()+" title {\"text\":\"Starting in: "+((timerLength) - (time / 20))+"...\",\"color\":\""+myColor+"\"}");
         player.getInventory().remove(Material.BOW);
         player.getInventory().remove(Material.ARROW);
@@ -275,7 +277,10 @@ public class maredare {
         player.getInventory().remove(Material.SADDLE);
         player.getInventory().remove(Material.LEATHER);
         player.removeScoreboardTag(dead_tag);
-        if (time % 20 == 0) { Bukkit.dispatchCommand(gameData.console, "execute as " + player.getName() + " run playsound " + timerTickSound + " master @s ~ ~ ~ 1 1.6 1"); }
+        if (time % 20 == 0) {
+            player.playSound(player.getLocation(), timerTickSound, SoundCategory.MASTER, 1f, 1.6f, 1);
+//            Bukkit.dispatchCommand(gameData.console, "execute as " + player.getName() + " run playsound " + timerTickSound + " master @s ~ ~ ~ 1 1.6 1");
+        }
     }
 
     Horse makeMare(Location spawnSpot) {
@@ -336,7 +341,8 @@ public class maredare {
             //there's no passenger
             if (mare.getPassengers().size() == 0) {
                 mare.addPassenger(mareAssignedPlayer);
-                Bukkit.dispatchCommand(gameData.console, "execute as " + mareAssignedPlayer.getName() + " run playsound " + gameData.timerTick + " master @s ~ ~ ~ 1 0.3 1");
+                mareAssignedPlayer.playSound(mareAssignedPlayer.getLocation(), gameData.snd_tick, SoundCategory.MASTER, 1f, 0.3f, 1);
+//                Bukkit.dispatchCommand(gameData.console, "execute as " + mareAssignedPlayer.getName() + " run playsound " + gameData.timerTick + " master @s ~ ~ ~ 1 0.3 1");
             }
             //oops
             if (mares.get(p).isDead()) {

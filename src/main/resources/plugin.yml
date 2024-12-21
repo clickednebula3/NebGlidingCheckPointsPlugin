@@ -1,7 +1,7 @@
 name: Nebpoints
 version: '${project.version}'
 main: nebpoints.nebpoints.Nebpoints
-api-version: 1.20
+api-version: 1.21
 authors: [ clickednebula3 ]
 description: A plugin for setting checkpoint and respawning for elytra gliding minigames
 website: http://nebneb.ddns.net
@@ -12,6 +12,7 @@ commands:
     permission: nebpoints.maredare
   nebClearScheduledRepeatingTasks:
     description: clears Bukkit scheduled repeating tasks used by NebPoints.
+    usage: /nebClearScheduledRepeatingTasks force
     permission: nebpoints.admin
   setneblobby:
     description: sets the lobby for neb-games
@@ -51,7 +52,7 @@ commands:
     permission: nebpoints.nebmsg
   nebmaplist:
     description: stores loaded maps into config
-    aliases: [nebreloadmaps, reloadmaps, neblistmap, nebconfigreloadmap]
+    aliases: [nebconfigwritemaps, neblistmap, nebwritemaps]
     permission: nebpoints.maplist
   nebmapcreategliding:
     description: Creates an empty map for gliding
@@ -89,5 +90,10 @@ commands:
   glidehostjoin:
     description: Joins a hosted gliding game during its waiting period.
     usage: /glidehostjoin gameId
-    aliases: [joinhostglide, joinglidehost, glidejoin]
+    aliases: [joinhostglide, joinglidehost, glidejoin, gljoin]
     permission: nebpoints.joinhost.gliding
+  noisifier:
+    description: Use the power of noisoids to flavour your experience.
+    usage: /noisifier <soundGroup> <SoundID>
+    aliases: [/nsf, /noisifierisor, /noisifierate]
+    permission: nebpoints.noisifier
