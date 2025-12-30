@@ -52,6 +52,10 @@ public final class Nebpoints extends JavaPlugin {
         this.getCommand("glidehostjoin").setExecutor(new hostJoinGlideExecutor(this, gameData, disasterData));
         this.getCommand("leave").setExecutor(new stopExecutor(gameData));
 
+        //fun / temp
+        this.getCommand("smp888allow").setExecutor(new smp888allow());
+        this.getCommand("smp888deny").setExecutor(new smp888deny());
+
         //command completer
         this.getCommand("start").setTabCompleter(new startCompleter(gameData));
         this.getCommand("disaster").setTabCompleter(new disasterCompleter(disasterData));

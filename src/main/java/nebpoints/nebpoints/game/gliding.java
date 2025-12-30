@@ -110,7 +110,6 @@ public class gliding {
         ArrayList<Integer> winRank = new ArrayList<>();//order the winners
 
         World gameWorld = Bukkit.getWorld(gameData.gameWorld);
-
         prepareGameRules(Objects.requireNonNull(gameWorld));
 
 //        Bukkit.dispatchCommand(gameData.console, "title @a reset");
@@ -163,7 +162,11 @@ public class gliding {
         //final double[] checkpointDistance = {0.0, 0.0, 0.0, 0.0};
         //should run every tick
         int loopID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(nebplugin, () -> {
+            int H = 0;
+            float S = 1, V = 1;
             if (isRunning[0]) {
+                H=(H+1)%360;
+
                 //remove disconnecters and "/stop"ers, and stop the game
                 int ptemp = 0;
                 for (Player plyr : plyrs) {//todo: ERROR HERE
@@ -293,6 +296,51 @@ public class gliding {
                                 }
                             }
                             eCD.set(p, 10);
+                        }
+                        else if (plyr.isGliding() && plyr.hasPermission(gameData.perm_glide_ranked)) {
+                            //credits to Mortaza Alhames for the HSV->RGB formula
+                            float R, G, B;
+                            if (H < 60 || H >= 300) {//R max
+                                R = V;
+                                if (H < 60) {//B min
+                                    B = -V*(S-1);
+                                    G = ((float) H/60)*(R-B)+B;//
+                                    while (G<0){G+=1;} while (G>1){G-=1;}
+                                } else {//G min
+                                    G = -V*(S-1);
+                                    B = -(((float) H/60)*(R-G)-G);
+                                    while (B<0){B+=1;} while (B>1){B-=1;}
+                                }
+                            } else if (H < 180) {//G max
+                                G = V;
+                                if (H < 120) {//B min
+                                    B = -V*(S-1);
+                                    R = -((((float) H/60)-2)*(G-B)-B);
+                                    while (R<0){R+=1;} while (R>1){R-=1;}
+                                } else {//R min
+                                    R = -V*(S-1);
+                                    B = (((float) H/60)-2)*(G-R)+R;//
+                                    while (B<0){B+=1;} while (B>1){B-=1;}
+                                }
+                            } else {//B max
+                                B = V;
+                                if (H < 240) {//R min
+                                    R = -V*(S-1);
+                                    G = -((((float) H/60)-4)*(B-R)-R);
+                                    while (G<0){G+=1;} while (G>1){G-=1;}
+                                } else {//G min
+                                    G = -V*(S-1);
+                                    R = (((float) H/60)-4)*(B-G)+G;//
+                                    while (R<0){R+=1;} while (R>1){R-=1;}
+                                }
+                            }
+                            plyr.getWorld().spawnParticle(
+                                    Particle.DUST, plyr.getLocation(), 0, 0, 0, 0,
+                                    new Particle.DustOptions(Color.fromRGB(
+                                        (int) (255*Math.clamp(R,0,1)),
+                                        (int) (255*Math.clamp(G,0,1)),
+                                        (int) (255*Math.clamp(B,0,1))
+                            ),1f));
                         }
 
                         if (plyr.isSneaking() && plyr.hasPotionEffect(PotionEffectType.LEVITATION)) {

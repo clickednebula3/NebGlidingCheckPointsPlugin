@@ -6,6 +6,12 @@ authors: [ clickednebula3 ]
 description: A plugin for setting checkpoint and respawning for elytra gliding minigames
 website: http://nebneb.ddns.net
 commands:
+  smp888allow:
+    permission: nebpoints.smp888admin
+    usage: /smp888allow [username]
+  smp888deny:
+    permission: nebpoints.smp888admin
+    usage: /smp888deny [username]
   maredare:
     aliases: [horserace, marerace, mare, maredarerace, murdermysteryrace]
     description: starts the fair mare dare race with utmost care in a specified place, leaves no trace (e.g. a broken vase), and retreats with a steady pace in case of a rare encounter with a basic hair-laced mace

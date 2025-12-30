@@ -51,7 +51,6 @@ public class disastrophe {
 
         prepareRules(plyrs, lobbyWorld, disasterData, ArenaID);
 
-
         final long[] time = {0};
         final long[] remainingTime = {-1};
         final long[] untilNextEvent = {-1};
